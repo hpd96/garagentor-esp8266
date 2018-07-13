@@ -1,0 +1,17 @@
+
+	        Text label="diverses" icon="chart" {
+
+	            Frame label="Türen" {
+				Text item=GaragenTorStatus
+				Text item=GaragenTorVersion
+				Text item=GaragenTorWiFi
+
+				Switch item=GaragenTorAktionZu visibility=[GaragenTorStatus=="Auf", GaragenTorStatus=="Halb auf"] mappings=[Auf=schliessen]
+				Switch item=GaragenTorAktionAuf visibility=[GaragenTorStatus=="Zu"] mappings=[Zu=offnen]
+				Text item=GaragenTorAktion
+				Text item=GaragentorAuf_seit  visibility=[GaragenTorStatus=="Auf", GaragenTorStatus=="Halb auf"]
+
+                    }
+       	        }
+
+

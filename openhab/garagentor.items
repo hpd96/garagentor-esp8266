@@ -1,0 +1,11 @@
+
+String GaragenTorStatus  "Garagentor [%s]"   <garagedoor>      (gTuer) {mqtt="<[tux:tuer/garagentor/status:state:default]"}
+String GaragenTorVersion  "Garagentor Version [%s]"   <garagedoor>      (gTuer) {mqtt="<[tux:tuer/garagentor/version:state:default]"}
+String GaragenTorWiFi  "Garagentor Wifi  [%s]"   <garagedoor>      (gTuer) {mqtt="<[tux:tuer/garagentor/wifi:state:default]"}
+String GaragenTorAktion  "Garagentor-Aktion [%s]"   <garagedoor>      (gTuer) {mqtt="<[tux:tuer/garagentor/action:state:default]"}
+
+String GaragenTorAktionZu 
+String GaragenTorAktionAuf
+
+DateTime GaragentorAuf_seit "tor nicht zu seit [%1$tH:%1$tM]" <moon>	
+

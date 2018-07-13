@@ -1,0 +1,47 @@
+var Timer GaragenTorAuf_timer = null
+val int timeoutMinutes = 10 // choose an appropriate value
+
+rule "Send telegram hoermann Garagentor"
+
+when
+
+	Item GaragenTorStatus changed
+
+then	
+
+logInfo("garagentorcheck status changed",  GaragenTorStatus.state.toString)
+
+
+  if ( GaragenTorStatus.state.toString.toLowerCase != "zu" ) 
+  {
+ 	sendTelegram("n3a_smarthome", "__Garage__: *Tor* \ud83c\udfe0 ist nun \ud83d\ude28 %s",
+ 		GaragenTorStatus.state.toString )
+
+        GaragentorAuf_seit.postUpdate(new DateTimeType())
+
+	if (GaragenTorAuf_timer === null) {  
+logInfo("garagentorcheck", "fire timer")
+logInfo("garagentorcheck", GaragentorAuf_seit.state.format("%1$tH:%1$tM") )
+
+		GaragenTorAuf_timer = createTimer(now.plusMinutes(timeoutMinutes), [|
+		sendTelegram("n3a_smarthome", "__Garage__: *Tor* \ud83c\udfe0 ist seit %s \ud83d\ude28 %s",
+			GaragentorAuf_seit.state.format("%1$tH:%1$tM"), GaragenTorStatus.state.toString )
+		GaragenTorAuf_timer.reschedule(now.plusMinutes(timeoutMinutes ))
+		])
+
+	} else {
+logInfo("garagentorcheck", "rearm timer")
+		GaragenTorAuf_timer.reschedule(now.plusMinutes(timeoutMinutes ))
+	}
+  }
+  else
+  {
+	sendTelegram("n3a_smarthome", "__Garage__: *Tor* \ud83c\udfe0 ist nun \ud83d\ude04 %s",
+  		GaragenTorStatus.state.toString )
+	GaragenTorAuf_timer?.cancel()
+ 	GaragenTorAuf_timer = null
+  }
+
+
+end
+
