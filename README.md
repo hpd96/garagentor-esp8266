@@ -2,7 +2,7 @@
 Garagentor-Steuerung mit ESP8266 und Arduino via http und mqtt für openHAB - Hörmann UAP1
 
 Hardware-Aufbau und Idee von http://www.majorshark.de/index.php/13-hoermann-torantrieb-mit-espeasy-in-fhem-einbinden
-Frank's Technik Blog	
+Frank's Technik Blog	:+1:
 - statt FHEM und ESPeasy aber openHAB und Arduino-Programmierung
 
 --
@@ -30,7 +30,7 @@ Die Ausgänge sind als potentialfreie Relaiskontakte ausgeführt. Die Eingänge 
 
 Weiterhin befindet sich ein 24V Anschluss auf der UAP 1, der mit 100mA belastet werden kann. Außerdem ein weiterer Anschluss, um das Tor komplett außer Betrieb zu nehmen. Dieser ist aber ab Werk mit einer Drahtbrücke versehen.
 
-##BOM
+## BOM
 
 1x 	Hörmann Universaladapterplatine UAP 1 	ca. 50,00€
 1x 	Wemos D1 	ca. 7,00€
@@ -45,7 +45,7 @@ Weiterhin befindet sich ein 24V Anschluss auf der UAP 1, der mit 100mA belastet 
 Universalplatine, Schaltdraht, Lötkolben
 
 
-##Schaltungsaufbau:
+## Schaltungsaufbau:
 
 Im wesentlichen besteht die Schaltung aus einem Wemos D1 und ein paar Bauteilen aus der Grabbelkiste. Die beiden Ausgänge der UAP 1 für Tor Endlage offen und Tor Endlage geschlossen sind als Relaisausgänge ausgeführt. Sie können direkt an den Wemos D1 angeschlossen werden. Die Entprellung der Relais-kontakte übernimmt dabei die Software (ESPEasy) auf dem ESP8266. Mit dem Relaisausgang O3 habe ich das jetzt weggefallene Hörmann Optionsrelais HOR1 für das Licht ersetzt.
 
@@ -64,7 +64,18 @@ Der Spannungswandler ist ebenfalls ein "Cent" Artikel aus dem Onlineshop. Fünf 
 
 Zusammengefasst in einem Schaltbild sieht es dann so aus. Links die Relaisausgänge der UAP 1, rechts die Eingänge inkl. der Stromversorgung von der UAP 1.
 
-##Aufbau auf der Universalplatine 
+![Alt text](./uap1wemos.png?raw=true "esp8266 schaltung")
+
+## Aufbau auf der Universalplatine 
 
 Aufgebaut habe ich das Ganze auf einer universal Lochrasterplatine. Die Platine hat die Maße 9x7cm. Damit die Platine in das Kästchen der UAP1 passt, muss diese noch zurecht geschnitten werden. In dem UAP1-Kasten sind seitlich kleine Stege. Diese habe ich in der Platine ausgeschnitten.
 
+## Wemos D1 einrichten mit Arduino
+
+Features:
+- http Status Abfrage
+- http Kommando Auf/Zu
+- http OTA update
+- mqtt status/command
+
+siehe .ino C code
