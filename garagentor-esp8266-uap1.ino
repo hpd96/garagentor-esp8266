@@ -1,5 +1,20 @@
 /*
-  To upload through terminal you can use: curl -F "image=@firmware.bin" esp8266-webupdate.local/firmware
+ * Hoermann Garagen-Tor mit ESP8266 und UAP1
+ * 
+ * features:
+ * http web page
+ * mqtt
+ * http OTA uploader
+ *     To upload through terminal you can use: curl -F "image=@firmware.bin" esp8266-webupdate.local/firmware
+ * 
+ * support for 
+ * S4 Zu/close
+ * S2 Auf/open 
+ * 
+ * 
+ * 
+ * GNU General Public License v2.0
+ * 
 */
 
 #include <ESP8266WiFi.h>
@@ -15,7 +30,7 @@
 
 unsigned long lastmillis;
 
-const char* sVersion = "0.8.23";
+const char* sVersion = "0.8.24";
 
 
 #define CLOSED LOW
@@ -25,7 +40,8 @@ const char* sVersion = "0.8.23";
 //Your MQTT Broker
 const char* mqtt_server = "hwr-pi";
 
-const char* mqtt_client_id = "hoermann-garage";
+// MQTT client is also host name for WIFI
+const char* mqtt_client_id = "garagentor";
 
 const char* mqtt_topic_cmd = "tuer/garagentor/cmd";
 const char* mqtt_topic_status = "tuer/garagentor/status";
@@ -34,12 +50,10 @@ const char* mqtt_topic_version = "tuer/garagentor/version";
 const char* mqtt_topic_wifi = "tuer/garagentor/wifi";
 
 
-
-const char* host = "esp8266-garage";
 //Your Wifi SSID
-const char* ssid = "....";
+const char* ssid = "3A-peter@demus.de";
 //Your Wifi Key
-const char* password = "...";
+const char* password = "lothar2602lothar2602";
 
 const char* update_path = "/firmware";
 const char* update_username = "admin";
@@ -80,8 +94,7 @@ Ticker ticker;
 
 
 //check gpio (input of hoermann uap1)
-void statusTor() 
-{
+void statusTor() {
   int myOldStatus = status;
  
   if ((digitalRead(gpioO1TorOben) == OPEN  ) && (digitalRead(gpioO2TorUnten) == OPEN  )) { status = HALBAUF; }
@@ -89,21 +102,11 @@ void statusTor()
   if ((digitalRead(gpioO1TorOben) == OPEN  ) && (digitalRead(gpioO2TorUnten) == CLOSED)) { status = ZU; }
   if ((digitalRead(gpioO1TorOben) == CLOSED) && (digitalRead(gpioO2TorUnten) == CLOSED)) { status = FEHLER; }
 
-#if 0
-  Serial.print("status ");
-  Serial.println(statusmeldung[status]);
-#endif
-
   if ( myOldStatus != status )
   {
-    Serial.print("Status has changed: ");
+    Serial.print("dbg: Status has changed: ");
     Serial.println(statusmeldung[status]);
-    client.publish(mqtt_topic_status, statusmeldung[status]);
   }
-
-  digitalWrite(gpioLed, (status != FEHLER) ); // LED on bei Fehler  
-  delay(1000);
-  digitalWrite(gpioLed, (status == FEHLER) ); // LED on bei Fehler
 }
 
 
@@ -178,13 +181,11 @@ void MqttReconnect() {
     }
   }
   Serial.println(" ok...");
-
 }
 
 
 
-void CheckDoorStatus()
-{
+void CheckDoorStatus() {
   int oldStatus = status;
   statusTor();
   if (oldStatus == status)
@@ -197,18 +198,23 @@ void CheckDoorStatus()
     Serial.print("Status has changed to: ");
     Serial.println(statusmeldung[status]);
     SendUpdate = true;
+    digitalWrite(gpioLed, (status != ZU) ); // LED on bei Fehler  
+    delay(1000);
+    digitalWrite(gpioLed, (status == ZU) ); // LED on bei Fehler
   }
 }
 
 
-void setup(void){
+void setup(void) {
 
   Serial.begin(115200);
   delay(300);
-  Serial.println("starte hoermann garage...");
-  Serial.println("");
+  Serial.println("\n\nstarte hoermann garage...");
+  Serial.println();
   Serial.println(sVersion);
   Serial.println();
+
+  lastmillis = millis();
 
   pinMode(gpioO1TorOben, INPUT_PULLUP);
   pinMode(gpioO2TorUnten, INPUT_PULLUP);
@@ -233,7 +239,7 @@ void setup(void){
   WiFi.begin(ssid, password);
 
 
-  while(WiFi.waitForConnectResult() != WL_CONNECTED){
+  while(WiFi.waitForConnectResult() != WL_CONNECTED) {
     WiFi.begin(ssid, password);
     Serial.println("WiFi failed, retrying.");
   }
@@ -242,19 +248,8 @@ void setup(void){
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
 
-  digitalWrite(gpioLed, HIGH );
-  delay(250);
-  digitalWrite(gpioLed, LOW );
-  delay(250);
-  digitalWrite(gpioLed, HIGH );
-  delay(250);
-  digitalWrite(gpioLed, LOW );
-  delay(250);
-  digitalWrite(gpioLed, HIGH );
-  delay(250);
 
-
-  MDNS.begin(host);
+  MDNS.begin(mqtt_client_id);
 
   httpUpdater.setup(&httpServer, update_path, update_username, update_password);
 
@@ -262,16 +257,14 @@ void setup(void){
 
   MDNS.addService("http", "tcp", 80);
 
-  Serial.printf("HTTPUpdateServer ready! \n  Open http://%s.local%s in your browser and\n login with username '%s' and password '%s'\n", host, update_path, update_username, update_password);
-
-  Serial.printf("\nsketch version: %s\n", sVersion);
+  Serial.printf("HTTPUpdateServer ready! \n  Open http://%s.local%s in your browser and\n login with username '%s' and password '%s'\n", mqtt_client_id, update_path, update_username, update_password);
+  Serial.printf("\nSketch version: %s\n", sVersion);
 
 
   client.setServer(mqtt_server, 1883);
   client.setCallback(MqttCallback);
   MqttReconnect();
   client.publish(mqtt_topic_version, sVersion);
-  statusTor();
   
 
   httpServer.on("/", []() {
@@ -330,14 +323,25 @@ void setup(void){
     httpServer.send ( 302, "text/plain", "oeffnen OK");
   });
 
+
+  // warte auf stabile UAP1-Ausgänge nach Strom-AUS
+  for ( int iLoop=0; iLoop<12; iLoop++) {
+    digitalWrite(gpioLed, HIGH );
+    statusTor();
+    delay(250);
+    digitalWrite(gpioLed, LOW );
+    statusTor();
+    delay(250);
+  }
+
   //Check the door status every 1 second
-  ticker.attach(5, CheckDoorStatus);
+  ticker.attach(1, CheckDoorStatus);
 
 }
 
 
 
-void loop(void){
+void loop(void) {
   httpServer.handleClient();
 
   if (!client.connected()) { MqttReconnect(); }
