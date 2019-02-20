@@ -1,3 +1,10 @@
+![cool](https://img.shields.io/badge/coolness-high-green.svg)  ![alt l](https://img.shields.io/github/license/hpd96/garagentor-esp8266.svg)
+
+<!-- ![download](https://img.shields.io/github/downloads/hpd96/garagentor-esp8266/total.svg) -->
+
+![commit](https://img.shields.io/github/last-commit/hpd96/garagentor-esp8266.svg)
+![GitHub release](https://img.shields.io/github/release/hpd96/garagentor-esp8266.svg)
+
 # garagentor-esp8266
 Garagentor-Steuerung mit ESP8266 und Arduino via http und mqtt für openHAB - Hörmann UAP1
 
